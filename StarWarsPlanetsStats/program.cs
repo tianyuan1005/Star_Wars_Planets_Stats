@@ -50,6 +50,113 @@ public class StarWarsPlanetsStatsApp
 
         }
         var root = JsonSerializer.Deserialize<Root>(json);
+
+        var planets = ToPlanets(root);
+
+        foreach(var planet in planets)
+        {
+            Console.WriteLine(planet);
+        }
+        Console.WriteLine();
+        Console.WriteLine("The statistics of which property would you like to see?");
+        Console.WriteLine("population");
+        Console.WriteLine("diameter");
+        Console.WriteLine("surface water");
+
+        var userChoice = Console.ReadLine();
+
+        if(userChoice == "population")
+        {
+            ShowStatistics(planets, "population", planet => planet.Population);
+            
+        }
+        else if (userChoice == "diameter")
+        {
+            ShowStatistics(planets, "diameter", planet => planet.Diameter);
+        }
+        else if (userChoice == "surface water")
+        {
+            ShowStatistics(planets, "surface water", planet => planet.SurfaceWater);
+        }
+        else
+        {
+            Console.WriteLine("Invalid choice");
+        }
+    }
+
+    private void ShowStatistics(IEnumerable<Planet> planets,string propertyName,Func<Planet,int?> propertySelector)
+    {
+        var planetWithMaxProperty = planets.MaxBy(propertySelector);
+        Console.WriteLine($"Max {propertyName} is: " +
+            $"{propertySelector(planetWithMaxProperty)} " +
+            $"(planet:{planetWithMaxProperty.Name})");
+
+        var planetWithMinProperty = planets.MinBy(propertySelector);
+        Console.WriteLine($"Min {propertyName} is: " +
+            $"{propertySelector(planetWithMinProperty)} " +
+            $"(planet:{planetWithMinProperty.Name})");
+    }
+
+    private IEnumerable<Planet> ToPlanets(Root? root)
+    {
+        if(root is null)
+        {
+            throw new ArgumentException(nameof(root));
+        }
+        var planets = new List<Planet>();
+
+        foreach(var planetDto in root.results)
+        {
+            Planet planet = (Planet)planetDto;
+            planets.Add(planet);
+        }
+        return planets;
     }
 }
 
+public readonly record struct Planet
+{
+    public string Name { get; }
+    public int Diameter { get; }
+    public int? SurfaceWater { get; }
+    public int? Population { get; }
+
+    public Planet(
+        string name,
+        int diameter,
+        int? surfaceWater,
+        int? population)
+    {
+        if(name is null)
+        {
+            throw new ArgumentException(nameof(name));
+        }
+        Name = name;
+        Diameter = diameter;
+        SurfaceWater = surfaceWater;
+        Population = population;
+    }
+
+    public static explicit operator Planet(Result planetDto)
+    {
+        var name = planetDto.name;
+        var diameter = int.Parse(planetDto.diameter);
+        int? population = planetDto.population.ToIntOrNull();
+        int? surfaceWater = planetDto.surface_water.ToIntOrNull();
+
+        return new Planet(name, diameter, surfaceWater, population);
+    }
+}
+
+public static class StringExtensions
+{
+    public static int? ToIntOrNull(this string? input)
+    {
+        int? result = null;
+        if (int.TryParse(input, out int inputParsed))
+        {
+            result = inputParsed;
+        }
+        return result;
+    }
+}
