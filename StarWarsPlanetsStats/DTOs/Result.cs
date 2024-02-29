@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+namespace StarWarsPlanetsStats.DTOs;
 
 public record Result(
        [property: JsonPropertyName("name")] string name,
@@ -15,5 +16,6 @@ public record Result(
        [property: JsonPropertyName("created")] DateTime created,
        [property: JsonPropertyName("edited")] DateTime edited,
        [property: JsonPropertyName("url")] string url
-   ) : IResult;
+   );
 
+    
